@@ -1,6 +1,13 @@
 {
     "pages": [
         {
+            "path": "pages/recommend/index",
+            "style": {
+                "navigationBarTitleText": "聚会推荐",
+                "navigationStyle": "custom"
+            }
+        },
+        {
             "path": "pages/home/index",
             "style": {
                 "navigationBarTitleText": "BGaide",
@@ -36,6 +43,13 @@
             }
         },
         {
+            "path": "pages/tools-spin-bottle/index",
+            "style": {
+                "navigationBarTitleText": "转瓶子",
+                "navigationStyle": "custom"
+            }
+        },
+        {
             "path": "pages/tools-scorer/index",
             "style": {
                 "navigationBarTitleText": "计分板",
@@ -55,6 +69,20 @@
                 "navigationBarTitleText": "计时器",
                 "navigationStyle": "custom"
             }
+        },
+        {
+            "path": "pages/tools-punishment/index",
+            "style": {
+                "navigationBarTitleText": "趣味惩罚",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/tools-ai/index",
+            "style": {
+                "navigationBarTitleText": "桌游 AI 助手",
+                "navigationStyle": "custom"
+            }
         }
     ],
     "tabBar": {
@@ -63,6 +91,12 @@
         "backgroundColor": "#ffffff",
         "borderStyle": "white",
         "list": [
+            {
+                "pagePath": "pages/recommend/index",
+                "text": "推荐",
+                "iconPath": "static/icons/home.png",
+                "selectedIconPath": "static/icons/home-active.png"
+            },
             {
                 "pagePath": "pages/home/index",
                 "text": "探索",

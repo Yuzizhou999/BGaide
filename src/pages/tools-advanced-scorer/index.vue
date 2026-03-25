@@ -1,5 +1,8 @@
 <template>
   <view class="page-container adv-page">
+    <view class="bg-orb orb-a"></view>
+    <view class="bg-orb orb-b"></view>
+
     <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="nav-content">
         <view class="nav-back" @tap="goBack"><text>← 返回</text></view>
@@ -9,6 +12,11 @@
     </view>
 
     <view class="adv-body" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
+      <view class="hero-board">
+        <text class="hero-title">七大奇迹专用计分台</text>
+        <text class="hero-desc">横向录入各分项，系统实时求和并显示总分。</text>
+      </view>
+
       <text class="mode-label">七大奇迹 积分模板</text>
 
       <!-- 添加玩家 -->
@@ -120,16 +128,43 @@ function goBack() { uni.navigateBack() }
 
 <style lang="scss" scoped>
 .adv-page {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
   padding-bottom: 60rpx;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff8ef 68%, #fff5ea 100%);
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 999rpx;
+  filter: blur(54rpx);
+  pointer-events: none;
+}
+
+.orb-a {
+  width: 380rpx;
+  height: 380rpx;
+  top: 220rpx;
+  right: -130rpx;
+  background: radial-gradient(circle, rgba(108, 92, 231, 0.16), rgba(108, 92, 231, 0));
+}
+
+.orb-b {
+  width: 360rpx;
+  height: 360rpx;
+  bottom: 120rpx;
+  left: -90rpx;
+  background: radial-gradient(circle, rgba(0, 184, 148, 0.16), rgba(0, 184, 148, 0));
 }
 
 .nav-bar {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 50;
-  background: var(--color-bg-secondary);
-  backdrop-filter: blur(20px);
-  border-bottom: 1rpx solid var(--color-divider);
+  background: rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(22px);
+  border-bottom: 1rpx solid rgba(238, 221, 200, 0.65);
 }
 
 .nav-content {
@@ -145,7 +180,33 @@ function goBack() { uni.navigateBack() }
 .nav-action { font-size: 26rpx; color: var(--color-danger); }
 
 .adv-body {
+  position: relative;
+  z-index: 2;
   padding: 24rpx 32rpx;
+}
+
+.hero-board {
+  padding: 22rpx 24rpx;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(240, 236, 255, 0.9), rgba(247, 245, 255, 0.92));
+  border: 2rpx solid rgba(108, 92, 231, 0.24);
+  box-shadow: 0 14rpx 34rpx rgba(73, 62, 136, 0.1);
+  margin-bottom: 16rpx;
+}
+
+.hero-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #5d4cb6;
+}
+
+.hero-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.55;
+  color: #6f63a3;
 }
 
 .mode-label {
@@ -159,13 +220,17 @@ function goBack() { uni.navigateBack() }
   display: flex;
   gap: 16rpx;
   margin-bottom: 24rpx;
+  padding: 18rpx;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.62);
+  border: 2rpx solid rgba(255, 255, 255, 0.82);
 }
 
 .name-input {
   flex: 1;
   height: 80rpx;
   padding: 0 24rpx;
-  background: var(--color-bg-card);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 243, 236, 0.95));
   border-radius: var(--radius-md);
   border: 2rpx solid var(--color-border);
   font-size: 28rpx;
@@ -183,12 +248,17 @@ function goBack() { uni.navigateBack() }
   color: #fff;
   font-size: 36rpx;
   font-weight: 700;
+  box-shadow: 0 12rpx 24rpx rgba(225, 112, 85, 0.2);
 }
 
 /* 计分表 */
 .score-table-scroll {
   white-space: nowrap;
   margin-top: 16rpx;
+  padding: 16rpx;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.64);
+  border: 2rpx solid rgba(255, 255, 255, 0.82);
 }
 
 .score-table {
@@ -218,12 +288,13 @@ function goBack() { uni.navigateBack() }
   position: sticky;
   left: 0;
   z-index: 2;
-  background: var(--color-bg-secondary);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .th-cell {
   border-radius: var(--radius-sm);
   margin: 4rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.7);
 }
 
 .th-icon { font-size: 28rpx; }
@@ -255,8 +326,8 @@ function goBack() { uni.navigateBack() }
   font-size: 28rpx;
   font-weight: 600;
   color: var(--color-text-primary);
-  background: var(--color-bg-card);
-  border: 2rpx solid var(--color-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 243, 236, 0.96));
+  border: 2rpx solid rgba(211, 197, 179, 0.84);
   border-radius: var(--radius-sm);
 }
 
@@ -275,6 +346,9 @@ function goBack() { uni.navigateBack() }
   flex-direction: column;
   align-items: center;
   padding: 100rpx 0;
+  background: rgba(255, 255, 255, 0.58);
+  border-radius: var(--radius-lg);
+  border: 2rpx dashed rgba(228, 210, 188, 0.8);
 }
 .empty-icon { font-size: 80rpx; margin-bottom: 16rpx; }
 .empty-text { font-size: 28rpx; color: var(--color-text-secondary); font-weight: 600; }

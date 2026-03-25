@@ -1,7 +1,7 @@
 {
-    "name": "BGaide",
+    "name": "星轨桌游宇宙",
     "appid": "__UNI__BGAIDE01",
-    "description": "桌游助手 - 规则查询百科与游玩辅助工具库",
+    "description": "穿梭星轨，漫游桌游浩瀚宇宙。",
     "versionName": "1.0.0",
     "versionCode": "100",
     "transformPx": false,
@@ -19,7 +19,7 @@
         "usingComponents": true
     },
     "h5": {
-        "title": "BGaide - 桌游助手",
+        "title": "星轨桌游宇宙",
         "router": {
             "mode": "hash"
         }

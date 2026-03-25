@@ -8,6 +8,7 @@ class GameItem(BaseModel):
     id: str
     name: str
     nameEn: str = ""
+    gameType: str | None = None
     cover: str = ""
     thumb: str = ""
     players: list[int]        # [min, max]
@@ -17,6 +18,7 @@ class GameItem(BaseModel):
     tags: list[str] = []
     hot: bool = False
     recommended: bool = False
+    visible: bool = True
     description: str = ""
 
 
@@ -53,6 +55,7 @@ class GameCreate(BaseModel):
     id: str
     name: str
     nameEn: str = ""
+    gameType: str | None = None
     aliases: list[str] = []
     cover: str = ""
     thumb: str = ""
@@ -63,6 +66,7 @@ class GameCreate(BaseModel):
     tags: list[str] = []
     hot: bool = False
     recommended: bool = False
+    visible: bool = True
     description: str = ""
 
 
@@ -71,3 +75,51 @@ class RulesCreate(BaseModel):
     setup: list[str] = []
     winCondition: str = ""
     turnFlow: list[str] = []
+
+
+# ── 用户反馈 ──
+class FeedbackCreate(BaseModel):
+    type: str  # correct / wish
+    content: str
+
+
+class FeedbackItem(BaseModel):
+    id: int
+    type: str
+    content: str
+    createdAt: int
+
+
+class PaginatedFeedbacks(BaseModel):
+    total: int
+    page: int
+    pageSize: int
+    data: list[FeedbackItem]
+
+
+# ── 收藏 ──
+class CollectionSyncPayload(BaseModel):
+    visitorId: str
+    gameId: str
+    collected: bool
+
+
+class CollectionSyncResult(BaseModel):
+    visitorId: str
+    gameId: str
+    collected: bool
+
+
+class CollectionListResponse(BaseModel):
+    visitorId: str
+    gameIds: list[str]
+
+
+# ── 推荐位配置 ──
+class RecommendConfigPayload(BaseModel):
+    gameIds: list[str] = []
+
+
+class RecommendConfigResponse(BaseModel):
+    gameIds: list[str]
+    data: list[GameItem]

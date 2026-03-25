@@ -1,13 +1,30 @@
 import { defineStore } from 'pinia'
+import { get, post } from '@/utils/api'
 
 const STORAGE_KEY_COLLECTIONS = 'bgaide_collections'
-const STORAGE_KEY_HISTORY = 'bgaide_history'
-const MAX_HISTORY = 20
+const STORAGE_KEY_VISITOR_ID = 'bgaide_visitor_id'
+const STORAGE_KEY_COLLECTION_OPS = 'bgaide_collection_ops'
+
+function createVisitorId() {
+    return `v_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+}
+
+function safeParseArray(raw) {
+    if (!raw) return []
+    try {
+        const parsed = JSON.parse(raw)
+        return Array.isArray(parsed) ? parsed : []
+    } catch {
+        return []
+    }
+}
 
 export const useUserStore = defineStore('user', {
     state: () => ({
         collections: [],    // 收藏的游戏 ID 数组
-        recentViews: []     // 最近浏览 { id, name, thumb, time }
+        visitorId: '',
+        pendingCollectionOps: [],
+        syncingCollections: false
     }),
 
     getters: {
@@ -20,50 +37,100 @@ export const useUserStore = defineStore('user', {
         // 初始化：从本地缓存恢复
         init() {
             try {
-                const c = uni.getStorageSync(STORAGE_KEY_COLLECTIONS)
-                if (c) this.collections = JSON.parse(c)
-                const h = uni.getStorageSync(STORAGE_KEY_HISTORY)
-                if (h) this.recentViews = JSON.parse(h)
+                this.collections = safeParseArray(uni.getStorageSync(STORAGE_KEY_COLLECTIONS))
+
+                const cachedVisitorId = uni.getStorageSync(STORAGE_KEY_VISITOR_ID)
+                if (cachedVisitorId) {
+                    this.visitorId = String(cachedVisitorId)
+                } else {
+                    this.visitorId = createVisitorId()
+                    uni.setStorageSync(STORAGE_KEY_VISITOR_ID, this.visitorId)
+                }
+
+                this.pendingCollectionOps = safeParseArray(
+                    uni.getStorageSync(STORAGE_KEY_COLLECTION_OPS)
+                )
             } catch (e) {
                 console.warn('UserStore init error:', e)
             }
+
+            // 恢复后尝试与服务端同步
+            this.syncCollectionsFromServer()
+            this.flushCollectionOps()
         },
 
         // 切换收藏
         toggleCollection(gameId) {
+            if (!gameId) return
             const idx = this.collections.indexOf(gameId)
+            let collected = false
             if (idx > -1) {
                 this.collections.splice(idx, 1)
+                collected = false
             } else {
                 this.collections.push(gameId)
+                collected = true
             }
             this._saveCollections()
-        },
 
-        // 记录浏览
-        addHistory(game) {
-            // 去重：移除已存在的记录
-            this.recentViews = this.recentViews.filter(v => v.id !== game.id)
-            // 插入到最前
-            this.recentViews.unshift({
-                id: game.id,
-                name: game.name,
-                thumb: game.thumb,
+            this.pendingCollectionOps.push({
+                gameId,
+                collected,
                 time: Date.now()
             })
-            // 限制条数
-            if (this.recentViews.length > MAX_HISTORY) {
-                this.recentViews = this.recentViews.slice(0, MAX_HISTORY)
-            }
-            this._saveHistory()
+            this._saveCollectionOps()
+            this.flushCollectionOps()
         },
 
         _saveCollections() {
             uni.setStorageSync(STORAGE_KEY_COLLECTIONS, JSON.stringify(this.collections))
         },
 
-        _saveHistory() {
-            uni.setStorageSync(STORAGE_KEY_HISTORY, JSON.stringify(this.recentViews))
+        _saveCollectionOps() {
+            uni.setStorageSync(STORAGE_KEY_COLLECTION_OPS, JSON.stringify(this.pendingCollectionOps))
+        },
+
+        async syncCollectionsFromServer() {
+            if (!this.visitorId) return
+            try {
+                const res = await get('/api/user/collections', { visitorId: this.visitorId })
+                const serverSet = new Set(Array.isArray(res.gameIds) ? res.gameIds : [])
+
+                // 本地未同步操作优先，避免拉取覆盖用户刚点击的收藏状态
+                for (const op of this.pendingCollectionOps) {
+                    if (!op || !op.gameId) continue
+                    if (op.collected) serverSet.add(op.gameId)
+                    else serverSet.delete(op.gameId)
+                }
+
+                this.collections = Array.from(serverSet)
+                this._saveCollections()
+            } catch (e) {
+                console.warn('syncCollectionsFromServer error:', e)
+            }
+        },
+
+        async flushCollectionOps() {
+            if (this.syncingCollections || !this.visitorId || !this.pendingCollectionOps.length) return
+
+            this.syncingCollections = true
+            const nextOps = []
+            for (const op of this.pendingCollectionOps) {
+                if (!op || !op.gameId) continue
+                try {
+                    await post('/api/user/collections', {
+                        visitorId: this.visitorId,
+                        gameId: op.gameId,
+                        collected: !!op.collected
+                    })
+                } catch (e) {
+                    nextOps.push(op)
+                }
+            }
+
+            this.pendingCollectionOps = nextOps
+            this._saveCollectionOps()
+            this.syncingCollections = false
         }
     }
 })

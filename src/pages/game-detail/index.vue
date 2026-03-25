@@ -2,12 +2,9 @@
   <view class="page-container detail-page">
     <!-- 自定义导航栏 -->
     <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="nav-content">
+      <view class="nav-content" :style="{ paddingRight: navRightPadding + 'px' }">
         <view class="nav-back" @tap="goBack">
           <text>← 返回</text>
-        </view>
-        <view class="nav-fav" @tap="toggleFav">
-          <text>{{ isFav ? '❤️' : '🤍' }}</text>
         </view>
       </view>
     </view>
@@ -15,9 +12,14 @@
     <view v-if="game" class="detail-body" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
       <!-- 封面 -->
       <view class="cover-area">
-        <image class="cover-img" :src="game.cover || '/static/images/placeholder.png'" mode="aspectFill" />
+        <image class="cover-img" :src="game.cover || '/static/icons/placeholder.svg'" mode="aspectFill" />
         <view class="cover-overlay">
-          <text class="cover-title">{{ game.name }}</text>
+          <view class="cover-title-row">
+            <text class="cover-title">{{ game.name }}</text>
+            <view class="cover-fav" :class="{ active: isFav }" @tap="toggleFav">
+              <text>{{ isFav ? '♥ 已收藏' : '♡ 收藏' }}</text>
+            </view>
+          </view>
           <text class="cover-subtitle">{{ game.nameEn }}</text>
         </view>
       </view>
@@ -59,12 +61,12 @@
         <RuleSection stepNumber="1" title="配件清单" hint="游戏包含哪些部件" :items="rules.quickLearn.components"
           listStyle="bullet" />
 
-        <RuleSection stepNumber="2" title="初始设置" hint="开始游戏前的准备工作" :items="rules.quickLearn.setup" listStyle="number" />
+        <RuleSection stepNumber="2" title="初始设置" hint="开始游戏前的准备工作" :items="normalizedSetupItems" listStyle="bullet" />
 
         <RuleSection stepNumber="3" title="胜利条件" hint="如何赢得这场游戏" :text="rules.quickLearn.winCondition" />
 
-        <RuleSection stepNumber="4" title="核心回合流程" hint="每个回合做什么" :items="rules.quickLearn.turnFlow"
-          listStyle="number" />
+        <RuleSection stepNumber="4" title="核心回合流程" hint="每个回合做什么" :items="normalizedTurnFlowItems"
+          listStyle="none" />
       </view>
 
       <!-- FAQ -->
@@ -102,6 +104,7 @@ const userStore = useUserStore()
 
 const gameId = ref('')
 const statusBarHeight = ref(44)
+const navRightPadding = ref(16)
 const faqKeyword = ref('')
 
 const game = ref(null)
@@ -111,6 +114,21 @@ const faqList = ref([])
 onLoad(async (options) => {
   const sysInfo = uni.getSystemInfoSync()
   statusBarHeight.value = sysInfo.statusBarHeight || 44
+
+  // 适配微信右上角胶囊，避免右侧按钮被系统区域遮挡
+  try {
+    const menuButtonRect = uni.getMenuButtonBoundingClientRect
+      ? uni.getMenuButtonBoundingClientRect()
+      : null
+    if (menuButtonRect && sysInfo.windowWidth) {
+      const capsuleWidth = sysInfo.windowWidth - menuButtonRect.left
+      navRightPadding.value = 16 + Math.max(capsuleWidth, 0)
+    }
+  } catch {
+    navRightPadding.value = 16
+  }
+
+  userStore.init()
 
   gameId.value = options.id || ''
 
@@ -124,15 +142,28 @@ onLoad(async (options) => {
   game.value = gameData
   rules.value = rulesData
   faqList.value = faqData || []
-
-  // 记录浏览历史
-  if (game.value) {
-    userStore.init()
-    userStore.addHistory(game.value)
-  }
 })
 
 const isFav = computed(() => userStore.isCollected(gameId.value))
+
+function stripLeadingOrderPrefix(text) {
+  const value = String(text || '').trim()
+  if (!value) return value
+  return value
+    .replace(/^第\s*\d+\s*[步项]\s*[-:：.、]?\s*/, '')
+    .replace(/^\d+\s*[.．、]\s*/, '')
+    .trim()
+}
+
+const normalizedSetupItems = computed(() => {
+  const setup = rules.value?.quickLearn?.setup || []
+  return setup.map(stripLeadingOrderPrefix)
+})
+
+const normalizedTurnFlowItems = computed(() => {
+  const flow = rules.value?.quickLearn?.turnFlow || []
+  return flow.map(stripLeadingOrderPrefix)
+})
 
 const filteredFaqs = computed(() => {
   if (!faqKeyword.value) return faqList.value
@@ -171,7 +202,7 @@ function goBack() {
 .nav-content {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   height: 88rpx;
   padding: 0 32rpx;
 }
@@ -180,10 +211,6 @@ function goBack() {
   font-size: 28rpx;
   color: var(--color-accent);
   font-weight: 500;
-}
-
-.nav-fav {
-  font-size: 40rpx;
 }
 
 /* 封面 */
@@ -210,11 +237,46 @@ function goBack() {
 }
 
 .cover-title {
+  flex: 1;
+  min-width: 0;
   font-size: 44rpx;
   font-weight: 800;
   color: #fff;
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+}
+
+.cover-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.cover-fav {
+  flex-shrink: 0;
+  height: 52rpx;
+  padding: 0 18rpx;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.2);
+  border: 2rpx solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  font-size: 22rpx;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &.active {
+    background: rgba(225, 112, 85, 0.28);
+    border-color: rgba(225, 112, 85, 0.65);
+  }
 }
 
 .cover-subtitle {

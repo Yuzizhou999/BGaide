@@ -17,7 +17,10 @@ HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
-# CORS 允许的来源
+# CORS 允许的来源（可通过环境变量覆盖）
+# 例如：CORS_ORIGINS="https://bgaide.cloud,http://localhost:5173"
 CORS_ORIGINS = [
-    "*",  # 开发阶段允许所有来源，生产环境应改为具体域名
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "https://bgaide.cloud,http://localhost:5173").split(",")
+    if origin.strip()
 ]

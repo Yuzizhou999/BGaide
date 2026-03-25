@@ -13,13 +13,15 @@ export const useGameStore = defineStore('game', {
         filters: {
             playerCount: null,
             duration: null,       // [min, max]
-            difficulty: null
+            difficulty: null,
+            gameType: null
         },
 
         // 分页
         total: 0,
         page: 1,
-        pageSize: 50,
+        pageSize: 100,
+        _fetchSeq: 0,
 
         // 单个游戏缓存
         _gameCache: {},    // { id: gameData }
@@ -64,27 +66,52 @@ export const useGameStore = defineStore('game', {
         async fetchGames() {
             this.loading = true
             this.error = null
+            const seq = ++this._fetchSeq
             try {
-                const params = {
+                const baseParams = {
                     keyword: this.keyword || null,
                     playerCount: this.filters.playerCount,
                     difficulty: this.filters.difficulty,
-                    page: this.page,
-                    pageSize: this.pageSize
+                    gameType: this.filters.gameType
                 }
                 // 时长筛选
                 if (this.filters.duration) {
-                    params.durationMin = this.filters.duration[0]
-                    params.durationMax = this.filters.duration[1]
+                    baseParams.durationMin = this.filters.duration[0]
+                    baseParams.durationMax = this.filters.duration[1]
                 }
 
-                const res = await get('/api/games', params)
-                this.allGames = res.data
-                this.total = res.total
+                const all = []
+                let page = 1
+                let total = 0
+
+                while (true) {
+                    const res = await get('/api/games', {
+                        ...baseParams,
+                        page,
+                        pageSize: this.pageSize
+                    })
+
+                    const pageData = Array.isArray(res?.data) ? res.data : []
+                    total = Number(res?.total || 0)
+                    all.push(...pageData)
+
+                    // 有total时以total为准；无total时以本页是否满页来判断
+                    const reachedTotal = total > 0 && all.length >= total
+                    const noMorePage = pageData.length < this.pageSize
+                    if (reachedTotal || noMorePage) break
+
+                    page += 1
+                }
+
+                if (seq !== this._fetchSeq) return
+                this.allGames = all
+                this.total = total || all.length
             } catch (e) {
+                if (seq !== this._fetchSeq) return
                 this.error = e.message
                 console.error('fetchGames error:', e)
             } finally {
+                if (seq !== this._fetchSeq) return
                 this.loading = false
             }
         },
@@ -146,9 +173,18 @@ export const useGameStore = defineStore('game', {
             this.fetchGames()
         },
 
+        applyFilters(nextFilters = {}) {
+            this.filters = {
+                ...this.filters,
+                ...nextFilters
+            }
+            this.page = 1
+            this.fetchGames()
+        },
+
         clearFilters() {
             this.keyword = ''
-            this.filters = { playerCount: null, duration: null, difficulty: null }
+            this.filters = { playerCount: null, duration: null, difficulty: null, gameType: null }
             this.page = 1
             this.fetchGames()
         }

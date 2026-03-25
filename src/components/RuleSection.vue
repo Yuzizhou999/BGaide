@@ -16,7 +16,7 @@
       <!-- 列表项模式 -->
       <view v-if="items && items.length" class="content-list">
         <view v-for="(item, idx) in items" :key="idx" class="content-item">
-          <text class="item-bullet">{{ listStyle === 'number' ? (idx + 1) + '.' : '•' }}</text>
+          <text v-if="listStyle !== 'none'" class="item-bullet">{{ listStyle === 'number' ? (idx + 1) + '.' : '•' }}</text>
           <text class="item-text">{{ item }}</text>
         </view>
       </view>

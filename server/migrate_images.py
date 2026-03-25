@@ -1,7 +1,8 @@
 """更新数据库中的图片路径：从小程序本地路径改为后端 URL"""
+import os
 import sqlite3
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = os.getenv("BASE_URL", "https://bgaide.cloud")
 
 conn = sqlite3.connect("data/bgaide.db")
 conn.row_factory = sqlite3.Row

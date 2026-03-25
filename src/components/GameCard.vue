@@ -1,11 +1,11 @@
 <template>
   <view class="game-card" @tap="goDetail">
     <view class="card-cover">
-      <image
+      <LazyImage
         class="cover-img"
-        :src="game.thumb || '/static/images/placeholder.png'"
+        :src="game.thumb || '/static/icons/placeholder.svg'"
         mode="aspectFill"
-        lazy-load
+        :preload="480"
       />
       <view v-if="game.hot" class="hot-badge">🔥 热门</view>
     </view>
@@ -36,6 +36,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import LazyImage from '@/components/LazyImage.vue'
 
 const props = defineProps({
   game: { type: Object, required: true }

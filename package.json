@@ -1,7 +1,7 @@
 {
-  "name": "bgaide",
+  "name": "星轨宇宙",
   "version": "1.0.0",
-  "description": "桌游助手 - 规则查询百科与游玩辅助工具库",
+  "description": "穿梭星轨，漫游桌游浩瀚宇宙。",
   "scripts": {
     "dev:mp-weixin": "uni -p mp-weixin",
     "build:mp-weixin": "uni build -p mp-weixin",

@@ -28,6 +28,9 @@ app = FastAPI(
     title="BGaide API",
     description="桌游助手后端 API — 规则查询百科与游玩辅助工具库",
     version="1.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
     lifespan=lifespan,
 )
 

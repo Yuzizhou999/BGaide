@@ -19,6 +19,7 @@ const props = defineProps({
 })
 
 const tabs = [
+    { path: '/pages/recommend/index', text: '推荐', icon: '🌟', activeIcon: '✨' },
     { path: '/pages/home/index', text: '探索', icon: '🔍', activeIcon: '🔎' },
     { path: '/pages/tools/index', text: '工具', icon: '🧰', activeIcon: '🛠️' },
     { path: '/pages/profile/index', text: '我的', icon: '👤', activeIcon: '😊' }

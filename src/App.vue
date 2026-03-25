@@ -4,6 +4,26 @@ export default {
     // 恢复主题设置
     const theme = uni.getStorageSync('bgaide_theme') || 'light'
     this.globalData.theme = theme
+
+    // #ifdef MP-WEIXIN
+    this.initWeChatCloud()
+    // #endif
+  },
+  methods: {
+    // 微信云开发初始化（AI 扩展能力依赖此初始化）
+    initWeChatCloud() {
+      if (typeof wx === 'undefined' || !wx.cloud) {
+        console.warn('wx.cloud 不可用，请确认在微信小程序环境运行')
+        return
+      }
+      try {
+        wx.cloud.init({
+          traceUser: true
+        })
+      } catch (error) {
+        console.error('wx.cloud.init 失败:', error)
+      }
+    }
   },
   globalData: {
     theme: 'light'

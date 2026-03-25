@@ -6,7 +6,7 @@
 
 示例：
   开发环境：python update_image_url.py http://localhost:8000
-  生产环境：python update_image_url.py https://api.你的域名.com
+    生产环境：python update_image_url.py https://bgaide.cloud
   改回本地：python update_image_url.py ""
 """
 
@@ -18,7 +18,7 @@ DB_PATH = "data/bgaide.db"
 def main():
     if len(sys.argv) < 2:
         print("用法: python update_image_url.py <新的基础地址>")
-        print("示例: python update_image_url.py https://api.example.com")
+        print("示例: python update_image_url.py https://bgaide.cloud")
         return
 
     new_base = sys.argv[1].rstrip("/")

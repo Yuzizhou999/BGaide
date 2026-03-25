@@ -16,7 +16,7 @@
         </view>
         <view v-if="collectedGames.length > 0" class="compact-list">
           <view v-for="game in collectedGames" :key="game.id" class="compact-item" @tap="goDetail(game.id)">
-            <image class="compact-thumb" :src="game.thumb || '/static/images/placeholder.png'" mode="aspectFill" />
+            <image class="compact-thumb" :src="game.thumb || '/static/icons/placeholder.svg'" mode="aspectFill" lazy-load />
             <view class="compact-info">
               <text class="compact-name">{{ game.name }}</text>
               <text class="compact-meta">{{ game.nameEn }} · ⭐{{ game.bggScore }}</text>
@@ -26,28 +26,6 @@
         </view>
         <view v-else class="empty-mini">
           <text>暂无收藏，去探索页面收藏喜欢的桌游吧</text>
-        </view>
-      </view>
-
-      <!-- 最近浏览 -->
-      <view class="section">
-        <view class="section-header-row">
-          <text class="section-title">🕐 最近浏览</text>
-          <text class="section-count">{{ userStore.recentViews.length }} 条</text>
-        </view>
-        <view v-if="userStore.recentViews.length > 0" class="compact-list">
-          <view v-for="item in userStore.recentViews" :key="item.id + item.time" class="compact-item"
-            @tap="goDetail(item.id)">
-            <image class="compact-thumb" :src="item.thumb || '/static/images/placeholder.png'" mode="aspectFill" />
-            <view class="compact-info">
-              <text class="compact-name">{{ item.name }}</text>
-              <text class="compact-meta">{{ formatTime(item.time) }}</text>
-            </view>
-            <text class="compact-arrow">›</text>
-          </view>
-        </view>
-        <view v-else class="empty-mini">
-          <text>暂无浏览记录</text>
         </view>
       </view>
 
@@ -83,7 +61,7 @@
     </view>
 
     <!-- 自定义 TabBar -->
-    <CustomTabBar :current="2" />
+    <CustomTabBar :current="3" />
   </view>
 </template>
 
@@ -93,6 +71,7 @@ import { onShow } from '@dcloudio/uni-app'
 import { useGameStore } from '@/stores/game'
 import { useUserStore } from '@/stores/user'
 import { applyTheme } from '@/utils/theme'
+import { post } from '@/utils/api'
 import CustomTabBar from '@/components/CustomTabBar.vue'
 
 const gameStore = useGameStore()
@@ -101,6 +80,64 @@ const statusBarHeight = ref(44)
 const showFeedback = ref(false)
 const feedbackType = ref('correct')
 const feedbackContent = ref('')
+const FEEDBACK_STORAGE_KEY = 'bgaide_feedbacks'
+
+function getLocalFeedbackQueue() {
+  try {
+    const raw = uni.getStorageSync(FEEDBACK_STORAGE_KEY) || '[]'
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function setLocalFeedbackQueue(list) {
+  uni.setStorageSync(FEEDBACK_STORAGE_KEY, JSON.stringify(list))
+}
+
+function shouldSyncFeedback(item) {
+  if (!item || !item.type || !item.content) return false
+  if (item.unsynced === true) return true
+  // 兼容旧版本本地反馈（没有 unsynced 字段）
+  return item.unsynced === undefined
+}
+
+function getNetworkType() {
+  return new Promise((resolve) => {
+    uni.getNetworkType({
+      success: (res) => resolve(res.networkType),
+      fail: () => resolve('unknown')
+    })
+  })
+}
+
+async function syncUnsyncedFeedbacks() {
+  const queue = getLocalFeedbackQueue()
+  if (!queue.length) return
+
+  const networkType = await getNetworkType()
+  if (networkType === 'none') return
+
+  const nextQueue = []
+  for (const item of queue) {
+    if (!shouldSyncFeedback(item)) {
+      nextQueue.push(item)
+      continue
+    }
+
+    try {
+      await post('/api/user/feedback', {
+        type: String(item.type).trim(),
+        content: String(item.content).trim()
+      })
+    } catch {
+      nextQueue.push({ ...item, unsynced: true })
+    }
+  }
+
+  setLocalFeedbackQueue(nextQueue)
+}
 
 onMounted(() => {
   const sysInfo = uni.getSystemInfoSync()
@@ -111,6 +148,10 @@ onMounted(() => {
 
 onShow(() => {
   uni.hideTabBar({ animation: false })
+  syncUnsyncedFeedbacks()
+  userStore.syncCollectionsFromServer()
+  userStore.flushCollectionOps()
+  hydrateCollectedGames()
 })
 
 const collectedGames = computed(() => {
@@ -125,14 +166,10 @@ function goDetail(id) {
   uni.navigateTo({ url: `/pages/game-detail/index?id=${id}` })
 }
 
-function formatTime(ts) {
-  const d = new Date(ts)
-  const now = new Date()
-  const diff = now - d
-  if (diff < 60000) return '刚刚'
-  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
-  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
-  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+async function hydrateCollectedGames() {
+  const missingIds = userStore.collections.filter(id => !gameStore.getGameById(id))
+  if (!missingIds.length) return
+  await Promise.all(missingIds.map(id => gameStore.fetchGameDetail(id)))
 }
 
 function openFeedback(type) {
@@ -141,22 +178,37 @@ function openFeedback(type) {
   showFeedback.value = true
 }
 
-function submitFeedback() {
+async function submitFeedback() {
   if (!feedbackContent.value.trim()) {
     uni.showToast({ title: '请输入反馈内容', icon: 'none' })
     return
   }
-  // 暂存到本地
-  const feedbacks = JSON.parse(uni.getStorageSync('bgaide_feedbacks') || '[]')
-  feedbacks.push({
+
+  const payload = {
     type: feedbackType.value,
-    content: feedbackContent.value,
-    time: Date.now()
-  })
-  uni.setStorageSync('bgaide_feedbacks', JSON.stringify(feedbacks))
+    content: feedbackContent.value.trim()
+  }
+
+  try {
+    await post('/api/user/feedback', payload)
+    syncUnsyncedFeedbacks()
+  } catch (e) {
+    // 网络失败时本地兜底，避免用户输入丢失
+    const feedbacks = getLocalFeedbackQueue()
+    feedbacks.push({
+      type: payload.type,
+      content: payload.content,
+      time: Date.now(),
+      unsynced: true
+    })
+    setLocalFeedbackQueue(feedbacks)
+  }
+
   showFeedback.value = false
   uni.showToast({ title: '感谢反馈！', icon: 'success' })
 }
+
+hydrateCollectedGames()
 </script>
 
 <style lang="scss" scoped>

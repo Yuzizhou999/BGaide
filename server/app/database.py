@@ -9,7 +9,7 @@ from . import config
 
 def get_connection() -> sqlite3.Connection:
     """获取数据库连接"""
-    conn = sqlite3.connect(config.DATABASE_PATH)
+    conn = sqlite3.connect(config.DATABASE_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row  # 返回字典风格的行
     conn.execute("PRAGMA journal_mode=WAL")  # 提升并发读性能
     return conn
@@ -29,6 +29,7 @@ def init_db():
     conn = get_connection()
     try:
         _create_tables(conn)
+        _migrate_schema(conn)
         _seed_data(conn)
     finally:
         conn.close()
@@ -41,6 +42,7 @@ def _create_tables(conn: sqlite3.Connection):
             id          TEXT PRIMARY KEY,
             name        TEXT NOT NULL,
             name_en     TEXT NOT NULL DEFAULT '',
+            game_type   TEXT,
             aliases     TEXT NOT NULL DEFAULT '[]',   -- JSON 数组
             cover       TEXT NOT NULL DEFAULT '',
             thumb       TEXT NOT NULL DEFAULT '',
@@ -53,6 +55,7 @@ def _create_tables(conn: sqlite3.Connection):
             tags        TEXT NOT NULL DEFAULT '[]',   -- JSON 数组
             hot         INTEGER NOT NULL DEFAULT 0,   -- 0/1
             recommended INTEGER NOT NULL DEFAULT 0,   -- 0/1
+            is_visible  INTEGER NOT NULL DEFAULT 1,   -- 0/1 是否展示
             description TEXT NOT NULL DEFAULT ''
         );
 
@@ -75,7 +78,52 @@ def _create_tables(conn: sqlite3.Connection):
         );
 
         CREATE INDEX IF NOT EXISTS idx_faqs_game_id ON faqs(game_id);
+
+        CREATE TABLE IF NOT EXISTS feedbacks (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            type        TEXT NOT NULL CHECK (type IN ('correct', 'wish')),
+            content     TEXT NOT NULL,
+            created_at  INTEGER NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_feedbacks_type_created_at
+            ON feedbacks(type, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS user_collections (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            visitor_id  TEXT NOT NULL,
+            game_id     TEXT NOT NULL,
+            created_at  INTEGER NOT NULL,
+            UNIQUE(visitor_id, game_id),
+            FOREIGN KEY (game_id) REFERENCES games(id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_user_collections_visitor_id
+            ON user_collections(visitor_id, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS recommendations (
+            slot        INTEGER PRIMARY KEY,
+            game_id     TEXT NOT NULL,
+            updated_at  INTEGER NOT NULL,
+            UNIQUE(game_id),
+            FOREIGN KEY (game_id) REFERENCES games(id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_recommendations_updated_at
+            ON recommendations(updated_at DESC);
     """)
+
+
+def _migrate_schema(conn: sqlite3.Connection):
+    """对已有数据库执行轻量结构迁移"""
+    columns = {
+        row["name"] for row in conn.execute("PRAGMA table_info(games)").fetchall()
+    }
+    if "game_type" not in columns:
+        conn.execute("ALTER TABLE games ADD COLUMN game_type TEXT")
+    if "is_visible" not in columns:
+        conn.execute("ALTER TABLE games ADD COLUMN is_visible INTEGER NOT NULL DEFAULT 1")
+        conn.commit()
 
 
 def _seed_data(conn: sqlite3.Connection):
@@ -92,12 +140,13 @@ def _seed_data(conn: sqlite3.Connection):
         games = json.loads(games_file.read_text(encoding="utf-8"))
         for g in games:
             conn.execute("""
-                INSERT INTO games (id, name, name_en, aliases, cover, thumb,
+                INSERT INTO games (id, name, name_en, game_type, aliases, cover, thumb,
                     players_min, players_max, duration_min, duration_max,
-                    difficulty, bgg_score, tags, hot, recommended, description)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    difficulty, bgg_score, tags, hot, recommended, is_visible, description)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 g["id"], g["name"], g.get("nameEn", ""),
+                g.get("gameType") or None,
                 json.dumps(g.get("aliases", []), ensure_ascii=False),
                 g.get("cover", ""), g.get("thumb", ""),
                 g["players"][0], g["players"][1],
@@ -106,6 +155,7 @@ def _seed_data(conn: sqlite3.Connection):
                 json.dumps(g.get("tags", []), ensure_ascii=False),
                 1 if g.get("hot") else 0,
                 1 if g.get("recommended") else 0,
+                1 if g.get("visible", True) else 0,
                 g.get("description", ""),
             ))
 

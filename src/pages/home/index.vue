@@ -5,7 +5,7 @@
       <view class="nav-content">
         <view class="nav-logo">
           <text class="logo-icon">🐰</text>
-          <text class="logo-text">BGaide</text>
+          <text class="logo-text">探索桌游宇宙</text>
         </view>
       </view>
     </view>
@@ -28,7 +28,7 @@
       <scroll-view class="recommend-scroll" scroll-x enable-flex>
         <view v-for="game in hotGames" :key="game.id" class="recommend-card" @tap="goDetail(game.id)">
           <view class="recommend-cover">
-            <image :src="game.thumb || '/static/images/placeholder.png'" mode="aspectFill" class="recommend-img" />
+            <image :src="game.thumb || '/static/icons/placeholder.svg'" mode="aspectFill" class="recommend-img" lazy-load />
           </view>
           <text class="recommend-name">{{ game.name }}</text>
           <view class="recommend-meta">
@@ -58,7 +58,7 @@
     <FilterPanel :visible="showFilter" @close="showFilter = false" @filter="onFilter" />
 
     <!-- 自定义 TabBar -->
-    <CustomTabBar :current="0" />
+    <CustomTabBar :current="1" />
   </view>
 </template>
 
@@ -92,6 +92,8 @@ onMounted(() => {
 
 onShow(() => {
   uni.hideTabBar({ animation: false })
+  userStore.syncCollectionsFromServer()
+  userStore.flushCollectionOps()
 })
 
 const filteredGames = computed(() => gameStore.filteredGames)
@@ -102,9 +104,12 @@ function onSearch(kw) {
 }
 
 function onFilter(filters) {
-  if (filters.playerCount !== undefined) gameStore.setFilter('playerCount', filters.playerCount)
-  if (filters.duration !== undefined) gameStore.setFilter('duration', filters.duration)
-  if (filters.difficulty !== undefined) gameStore.setFilter('difficulty', filters.difficulty)
+  gameStore.applyFilters({
+    playerCount: filters.playerCount,
+    duration: filters.duration,
+    difficulty: filters.difficulty,
+    gameType: filters.gameType
+  })
 }
 
 function goDetail(id) {
@@ -152,6 +157,7 @@ function goDetail(id) {
   font-weight: 800;
   background: linear-gradient(135deg, var(--color-accent), var(--color-accent-light));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

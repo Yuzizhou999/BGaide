@@ -1,5 +1,8 @@
 <template>
   <view class="page-container fp-page">
+    <view class="bg-orb orb-a"></view>
+    <view class="bg-orb orb-b"></view>
+
     <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="nav-content">
         <view class="nav-back" @tap="goBack"><text>← 返回</text></view>
@@ -9,17 +12,16 @@
     </view>
 
     <view class="fp-body" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
+      <view class="hero-tip">
+        <text class="hero-title">让先手更公平</text>
+        <text class="hero-desc">输入玩家后一键摇号，再也不为先手烦恼😣。</text>
+      </view>
+
       <!-- 输入区 -->
       <view class="input-section">
         <text class="section-label">添加玩家昵称</text>
         <view class="input-row">
-          <input
-            class="name-input"
-            type="text"
-            v-model="newName"
-            placeholder="输入昵称..."
-            @confirm="addPlayer"
-          />
+          <input class="name-input" type="text" v-model="newName" placeholder="输入昵称..." @confirm="addPlayer" />
           <view class="add-btn" @tap="addPlayer">
             <text>+</text>
           </view>
@@ -46,11 +48,7 @@
 
       <!-- 操作按钮 -->
       <view class="action-row">
-        <view
-          class="roll-btn"
-          :class="{ disabled: players.length < 2 || isSpinning }"
-          @tap="startRoll"
-        >
+        <view class="roll-btn" :class="{ disabled: players.length < 2 || isSpinning }" @tap="startRoll">
           <text>{{ isSpinning ? '摇号中...' : '🎲 开始摇号' }}</text>
         </view>
         <view class="reset-btn" @tap="reset">
@@ -133,16 +131,45 @@ function goBack() {
 
 <style lang="scss" scoped>
 .fp-page {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
   padding-bottom: 60rpx;
+  background: linear-gradient(180deg, #fffdf9 0%, #fff8f0 66%, #fff5ea 100%);
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 999rpx;
+  filter: blur(52rpx);
+  pointer-events: none;
+}
+
+.orb-a {
+  width: 360rpx;
+  height: 360rpx;
+  top: 180rpx;
+  right: -100rpx;
+  background: radial-gradient(circle, rgba(116, 185, 255, 0.18), rgba(116, 185, 255, 0));
+}
+
+.orb-b {
+  width: 340rpx;
+  height: 340rpx;
+  bottom: 130rpx;
+  left: -90rpx;
+  background: radial-gradient(circle, rgba(255, 159, 67, 0.18), rgba(255, 159, 67, 0));
 }
 
 .nav-bar {
   position: fixed;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 50;
-  background: var(--color-bg-secondary);
-  backdrop-filter: blur(20px);
-  border-bottom: 1rpx solid var(--color-divider);
+  background: rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(22px);
+  border-bottom: 1rpx solid rgba(238, 221, 200, 0.65);
 }
 
 .nav-content {
@@ -157,6 +184,7 @@ function goBack() {
   font-size: 28rpx;
   color: var(--color-accent);
   width: 80rpx;
+  white-space: nowrap;
 }
 
 .nav-title {
@@ -166,7 +194,33 @@ function goBack() {
 }
 
 .fp-body {
+  position: relative;
+  z-index: 2;
   padding: 32rpx;
+}
+
+.hero-tip {
+  padding: 22rpx 24rpx;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(140deg, rgba(230, 241, 255, 0.9), rgba(243, 250, 255, 0.92));
+  border: 2rpx solid rgba(116, 185, 255, 0.28);
+  box-shadow: 0 14rpx 34rpx rgba(60, 95, 140, 0.1);
+  margin-bottom: 22rpx;
+}
+
+.hero-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #2b6ea3;
+}
+
+.hero-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.55;
+  color: #507ea3;
 }
 
 .section-label {
@@ -179,13 +233,17 @@ function goBack() {
 .input-row {
   display: flex;
   gap: 16rpx;
+  padding: 18rpx;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.62);
+  border: 2rpx solid rgba(255, 255, 255, 0.82);
 }
 
 .name-input {
   flex: 1;
   height: 80rpx;
   padding: 0 24rpx;
-  background: var(--color-bg-card);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 243, 236, 0.95));
   border-radius: var(--radius-md);
   border: 2rpx solid var(--color-border);
   font-size: 28rpx;
@@ -203,6 +261,7 @@ function goBack() {
   color: #fff;
   font-size: 40rpx;
   font-weight: 700;
+  box-shadow: 0 12rpx 24rpx rgba(225, 112, 85, 0.2);
 }
 
 .players-list {
@@ -218,9 +277,9 @@ function goBack() {
   align-items: center;
   gap: 8rpx;
   padding: 10rpx 20rpx;
-  background: var(--color-accent-bg);
+  background: linear-gradient(145deg, rgba(225, 112, 85, 0.14), rgba(253, 203, 110, 0.14));
   border-radius: var(--radius-full);
-  border: 2rpx solid var(--color-accent);
+  border: 2rpx solid rgba(225, 112, 85, 0.42);
 }
 
 .chip-name {
@@ -253,12 +312,12 @@ function goBack() {
   width: 320rpx;
   height: 320rpx;
   border-radius: 50%;
-  background: var(--color-bg-card);
-  border: 6rpx solid var(--color-border);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(255, 244, 230, 0.95));
+  border: 6rpx solid rgba(255, 209, 155, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 22rpx 48rpx rgba(73, 51, 27, 0.12);
   transition: all 0.3s ease;
 
   &.spinning {
@@ -280,8 +339,15 @@ function goBack() {
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .action-row {
@@ -315,9 +381,9 @@ function goBack() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-bg-card);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 243, 236, 0.95));
   border-radius: var(--radius-lg);
-  border: 2rpx solid var(--color-border);
+  border: 2rpx solid rgba(211, 197, 179, 0.84);
   color: var(--color-text-secondary);
   font-size: 28rpx;
 }

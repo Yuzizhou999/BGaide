@@ -39,6 +39,17 @@
       </view>
     </view>
 
+    <!-- 游戏类型 -->
+    <view class="filter-section">
+      <text class="filter-label">游戏类型</text>
+      <view class="filter-tags">
+        <view v-for="t in gameTypeOptions" :key="t" class="filter-tag"
+          :class="{ active: selectedGameType === t }" @tap="selectGameType(t)">
+          {{ t }}
+        </view>
+      </view>
+    </view>
+
     <!-- 确认 -->
     <view class="filter-confirm" @tap="onConfirm">
       <text>确认筛选</text>
@@ -63,10 +74,12 @@ const durationOptions = [
   { label: '2小时以上', range: [120, 999] }
 ]
 const difficultyOptions = ['简单', '中等', '困难']
+const gameTypeOptions = ['德式', '美式', '毛线聚会']
 
 const selectedPlayers = ref(null)
 const selectedDurationLabel = ref(null)
 const selectedDifficulty = ref(null)
+const selectedGameType = ref(null)
 
 function selectPlayers(n) {
   selectedPlayers.value = selectedPlayers.value === n ? null : n
@@ -84,11 +97,16 @@ function selectDifficulty(lv) {
   selectedDifficulty.value = selectedDifficulty.value === lv ? null : lv
 }
 
+function selectGameType(type) {
+  selectedGameType.value = selectedGameType.value === type ? null : type
+}
+
 function onReset() {
   selectedPlayers.value = null
   selectedDurationLabel.value = null
   selectedDifficulty.value = null
-  emit('filter', { playerCount: null, duration: null, difficulty: null })
+  selectedGameType.value = null
+  emit('filter', { playerCount: null, duration: null, difficulty: null, gameType: null })
 }
 
 function onConfirm() {
@@ -96,7 +114,8 @@ function onConfirm() {
   emit('filter', {
     playerCount: selectedPlayers.value,
     duration: selectedDuration ? selectedDuration.range : null,
-    difficulty: selectedDifficulty.value
+    difficulty: selectedDifficulty.value,
+    gameType: selectedGameType.value
   })
   emit('close')
 }

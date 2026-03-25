@@ -1,5 +1,8 @@
 <template>
   <view class="page-container timer-page">
+    <view class="bg-orb orb-a"></view>
+    <view class="bg-orb orb-b"></view>
+
     <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="nav-content">
         <view class="nav-back" @tap="goBack"><text>← 返回</text></view>
@@ -9,6 +12,11 @@
     </view>
 
     <view class="timer-body" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
+      <view class="hero-tip">
+        <text class="hero-title">专注回合节奏</text>
+        <text class="hero-desc">倒计时适合限时决策，正计时适合记录整局时长。</text>
+      </view>
+
       <!-- 模式切换 -->
       <view class="mode-tabs">
         <view
@@ -174,16 +182,43 @@ function goBack() { uni.navigateBack() }
 
 <style lang="scss" scoped>
 .timer-page {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
   padding-bottom: 60rpx;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff7ee 68%, #fff5e9 100%);
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 999rpx;
+  filter: blur(52rpx);
+  pointer-events: none;
+}
+
+.orb-a {
+  width: 360rpx;
+  height: 360rpx;
+  top: 160rpx;
+  right: -100rpx;
+  background: radial-gradient(circle, rgba(9, 132, 227, 0.16), rgba(9, 132, 227, 0));
+}
+
+.orb-b {
+  width: 340rpx;
+  height: 340rpx;
+  bottom: 120rpx;
+  left: -80rpx;
+  background: radial-gradient(circle, rgba(225, 112, 85, 0.16), rgba(225, 112, 85, 0));
 }
 
 .nav-bar {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 50;
-  background: var(--color-bg-secondary);
-  backdrop-filter: blur(20px);
-  border-bottom: 1rpx solid var(--color-divider);
+  background: rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(22px);
+  border-bottom: 1rpx solid rgba(238, 221, 200, 0.65);
 }
 
 .nav-content {
@@ -198,16 +233,44 @@ function goBack() { uni.navigateBack() }
 .nav-title { font-size: 32rpx; font-weight: 700; color: var(--color-text-primary); }
 
 .timer-body {
+  position: relative;
+  z-index: 2;
   padding: 32rpx;
+}
+
+.hero-tip {
+  padding: 22rpx 24rpx;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(255, 237, 210, 0.9), rgba(255, 248, 238, 0.92));
+  border: 2rpx solid rgba(255, 187, 112, 0.32);
+  box-shadow: 0 14rpx 34rpx rgba(180, 111, 55, 0.1);
+  margin-bottom: 22rpx;
+}
+
+.hero-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #8a4f1f;
+}
+
+.hero-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: #9a6d43;
 }
 
 /* 模式切换 */
 .mode-tabs {
   display: flex;
-  background: var(--color-bg-card);
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(16px);
   border-radius: var(--radius-lg);
   padding: 6rpx;
-  border: 2rpx solid var(--color-border);
+  border: 2rpx solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 12rpx 24rpx rgba(68, 48, 28, 0.08);
 }
 
 .mode-tab {
@@ -231,6 +294,10 @@ function goBack() { uni.navigateBack() }
 /* 预设 */
 .presets {
   margin-top: 32rpx;
+  padding: 20rpx;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.6);
+  border: 2rpx solid rgba(255, 255, 255, 0.8);
 }
 
 .preset-label {
@@ -251,8 +318,9 @@ function goBack() { uni.navigateBack() }
   border-radius: var(--radius-full);
   font-size: 26rpx;
   color: var(--color-text-secondary);
-  background: var(--color-bg-card);
-  border: 2rpx solid var(--color-border);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.9), rgba(248, 244, 238, 0.9));
+  border: 2rpx solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 8rpx 16rpx rgba(56, 35, 17, 0.06);
   transition: all 0.2s ease;
 
   &.active {
@@ -274,12 +342,12 @@ function goBack() { uni.navigateBack() }
   width: 400rpx;
   height: 400rpx;
   border-radius: 50%;
-  background: var(--color-bg-card);
-  border: 8rpx solid var(--color-border);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.95), rgba(255, 244, 230, 0.95));
+  border: 8rpx solid rgba(255, 209, 155, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 22rpx 48rpx rgba(73, 51, 27, 0.12);
   transition: all 0.3s ease;
 
   &.running {
@@ -322,7 +390,7 @@ function goBack() { uni.navigateBack() }
 
 .clock-label {
   font-size: 24rpx;
-  color: var(--color-text-tertiary);
+  color: #91785f;
   margin-top: 4rpx;
 }
 
@@ -343,14 +411,16 @@ function goBack() { uni.navigateBack() }
   font-weight: 600;
 
   &.secondary {
-    background: var(--color-bg-card);
-    border: 2rpx solid var(--color-border);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 243, 236, 0.95));
+    border: 2rpx solid rgba(211, 197, 179, 0.84);
     color: var(--color-text-secondary);
+    box-shadow: 0 12rpx 24rpx rgba(56, 35, 17, 0.08);
   }
 
   &.primary {
     background: linear-gradient(135deg, var(--color-accent), var(--color-accent-light));
     color: #fff;
+    box-shadow: 0 14rpx 28rpx rgba(225, 112, 85, 0.24);
 
     &.pause {
       background: linear-gradient(135deg, var(--color-danger), #ff7675);

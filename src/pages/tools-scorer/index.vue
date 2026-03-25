@@ -1,5 +1,8 @@
 <template>
   <view class="page-container scorer-page">
+    <view class="bg-orb orb-a"></view>
+    <view class="bg-orb orb-b"></view>
+
     <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="nav-content">
         <view class="nav-back" @tap="goBack"><text>← 返回</text></view>
@@ -9,6 +12,11 @@
     </view>
 
     <view class="scorer-body" :style="{ paddingTop: (statusBarHeight + 44) + 'px' }">
+      <view class="hero-board">
+        <text class="hero-title">实时排名看得见</text>
+        <text class="hero-desc">分数变化即时更新，领先玩家会高亮显示。</text>
+      </view>
+
       <!-- 添加玩家 -->
       <view class="add-section">
         <view class="input-row">
@@ -126,16 +134,43 @@ function goBack() {
 
 <style lang="scss" scoped>
 .scorer-page {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
   padding-bottom: 60rpx;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff8ef 68%, #fff5ea 100%);
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 999rpx;
+  filter: blur(54rpx);
+  pointer-events: none;
+}
+
+.orb-a {
+  width: 380rpx;
+  height: 380rpx;
+  top: 220rpx;
+  right: -120rpx;
+  background: radial-gradient(circle, rgba(0, 184, 148, 0.15), rgba(0, 184, 148, 0));
+}
+
+.orb-b {
+  width: 340rpx;
+  height: 340rpx;
+  bottom: 140rpx;
+  left: -80rpx;
+  background: radial-gradient(circle, rgba(225, 112, 85, 0.18), rgba(225, 112, 85, 0));
 }
 
 .nav-bar {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 50;
-  background: var(--color-bg-secondary);
-  backdrop-filter: blur(20px);
-  border-bottom: 1rpx solid var(--color-divider);
+  background: rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(22px);
+  border-bottom: 1rpx solid rgba(238, 221, 200, 0.65);
 }
 
 .nav-content {
@@ -151,7 +186,40 @@ function goBack() {
 .nav-action { font-size: 26rpx; color: var(--color-danger); }
 
 .scorer-body {
+  position: relative;
+  z-index: 2;
   padding: 24rpx 32rpx;
+}
+
+.hero-board {
+  padding: 22rpx 24rpx;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(224, 255, 245, 0.86), rgba(245, 255, 251, 0.9));
+  border: 2rpx solid rgba(0, 184, 148, 0.22);
+  box-shadow: 0 14rpx 34rpx rgba(36, 110, 89, 0.1);
+  margin-bottom: 20rpx;
+}
+
+.hero-title {
+  display: block;
+  font-size: 30rpx;
+  color: #0b7d65;
+  font-weight: 800;
+}
+
+.hero-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.55;
+  color: #3f8f7f;
+}
+
+.add-section {
+  padding: 18rpx;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.62);
+  border: 2rpx solid rgba(255, 255, 255, 0.82);
 }
 
 .input-row {
@@ -163,7 +231,7 @@ function goBack() {
   flex: 1;
   height: 80rpx;
   padding: 0 24rpx;
-  background: var(--color-bg-card);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 243, 236, 0.95));
   border-radius: var(--radius-md);
   border: 2rpx solid var(--color-border);
   font-size: 28rpx;
@@ -181,6 +249,7 @@ function goBack() {
   color: #fff;
   font-size: 28rpx;
   font-weight: 600;
+  box-shadow: 0 12rpx 24rpx rgba(225, 112, 85, 0.2);
 }
 
 .player-list {
@@ -192,15 +261,16 @@ function goBack() {
   align-items: center;
   gap: 16rpx;
   padding: 20rpx 24rpx;
-  background: var(--color-bg-card);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.93), rgba(255, 247, 238, 0.93));
   border-radius: var(--radius-md);
   margin-bottom: 12rpx;
-  border: 2rpx solid var(--color-border);
+  border: 2rpx solid rgba(255, 255, 255, 0.78);
   transition: all 0.3s ease;
+  box-shadow: 0 12rpx 24rpx rgba(56, 35, 17, 0.08);
 
   &.is-leading {
-    border-color: var(--color-accent);
-    background: var(--color-accent-bg);
+    border-color: rgba(0, 184, 148, 0.45);
+    background: linear-gradient(145deg, rgba(0, 184, 148, 0.14), rgba(85, 239, 196, 0.12));
   }
 }
 
@@ -208,7 +278,7 @@ function goBack() {
   width: 48rpx;
   height: 48rpx;
   border-radius: 50%;
-  background: var(--color-bg-primary);
+  background: linear-gradient(180deg, #fffefc, #f1ece5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -252,11 +322,11 @@ function goBack() {
   font-weight: 700;
 
   &.minus {
-    background: rgba(225, 112, 85, 0.1);
+    background: rgba(225, 112, 85, 0.14);
     color: var(--color-danger);
   }
   &.plus {
-    background: rgba(0, 184, 148, 0.1);
+    background: rgba(0, 184, 148, 0.14);
     color: var(--color-success);
   }
 
@@ -285,6 +355,9 @@ function goBack() {
   flex-direction: column;
   align-items: center;
   padding: 100rpx 0;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius-lg);
+  border: 2rpx dashed rgba(228, 210, 188, 0.8);
 }
 
 .empty-icon { font-size: 80rpx; margin-bottom: 16rpx; }
