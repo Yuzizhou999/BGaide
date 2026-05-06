@@ -93,11 +93,13 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { useGameStore } from '@/stores/game'
 import { useUserStore } from '@/stores/user'
 import RuleSection from '@/components/RuleSection.vue'
 import FaqItem from '@/components/FaqItem.vue'
+import { enableWeChatOfficialShare, buildPageSharePayload, buildTimelineSharePayload, buildShareImages } from '@/utils/share'
+import { getStatusBarHeight, getWindowInfoSafe } from '@/utils/system'
 
 const gameStore = useGameStore()
 const userStore = useUserStore()
@@ -112,16 +114,16 @@ const rules = ref(null)
 const faqList = ref([])
 
 onLoad(async (options) => {
-  const sysInfo = uni.getSystemInfoSync()
-  statusBarHeight.value = sysInfo.statusBarHeight || 44
+  const windowInfo = getWindowInfoSafe()
+  statusBarHeight.value = getStatusBarHeight(44)
 
   // 适配微信右上角胶囊，避免右侧按钮被系统区域遮挡
   try {
     const menuButtonRect = uni.getMenuButtonBoundingClientRect
       ? uni.getMenuButtonBoundingClientRect()
       : null
-    if (menuButtonRect && sysInfo.windowWidth) {
-      const capsuleWidth = sysInfo.windowWidth - menuButtonRect.left
+    if (menuButtonRect && windowInfo.windowWidth) {
+      const capsuleWidth = windowInfo.windowWidth - menuButtonRect.left
       navRightPadding.value = 16 + Math.max(capsuleWidth, 0)
     }
   } catch {
@@ -129,6 +131,7 @@ onLoad(async (options) => {
   }
 
   userStore.init()
+  enableWeChatOfficialShare()
 
   gameId.value = options.id || ''
 
@@ -173,13 +176,49 @@ const filteredFaqs = computed(() => {
   )
 })
 
+const shareTitle = computed(() => {
+  if (!game.value?.name) return '星轨桌游'
+  return `星轨桌游｜${game.value.name}`
+})
+
+const shareImage = computed(() => {
+  if (!game.value) return buildShareImages('/static/icons/placeholder.svg')
+  return buildShareImages(game.value.cover, game.value.thumb)
+})
+
+const shareQuery = computed(() => (gameId.value ? `id=${gameId.value}` : ''))
+
 function toggleFav() {
   userStore.toggleCollection(gameId.value)
 }
 
 function goBack() {
-  uni.navigateBack()
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack()
+    return
+  }
+
+  // 从分享卡片直达时通常没有页面栈，回到推荐页兜底
+  uni.switchTab({
+    url: '/pages/recommend/index',
+    fail: () => {
+      uni.reLaunch({ url: '/pages/recommend/index' })
+    }
+  })
 }
+
+onShareAppMessage(() => buildPageSharePayload({
+  title: shareTitle.value,
+  path: gameId.value ? `/pages/game-detail/index?id=${gameId.value}` : '/pages/home/index',
+  imageUrl: shareImage.value
+}))
+
+onShareTimeline(() => buildTimelineSharePayload({
+  title: shareTitle.value,
+  query: shareQuery.value,
+  imageUrl: shareImage.value
+}))
 </script>
 
 <style lang="scss" scoped>

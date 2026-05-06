@@ -25,17 +25,19 @@
     <!-- 推荐横幅 -->
     <view v-if="!keyword" class="recommend-section">
       <text class="section-title">🔥 热门推荐</text>
-      <scroll-view class="recommend-scroll" scroll-x enable-flex>
-        <view v-for="game in hotGames" :key="game.id" class="recommend-card" @tap="goDetail(game.id)">
-          <view class="recommend-cover">
-            <image :src="game.thumb || '/static/icons/placeholder.svg'" mode="aspectFill" class="recommend-img" lazy-load />
+      <intersection-observer @intersect="onHotGameIntersect">
+        <scroll-view class="recommend-scroll" scroll-x enable-flex>
+          <view v-for="game in hotGames" :key="game.id" class="recommend-card" @tap="goDetail(game.id)">
+            <view class="recommend-cover">
+              <image :src="game.thumb || '/static/icons/placeholder.svg'" mode="aspectFill" class="recommend-img" lazy-load />
+            </view>
+            <text class="recommend-name">{{ game.name }}</text>
+            <view class="recommend-meta">
+              <text>⭐ {{ game.bggScore }}</text>
+            </view>
           </view>
-          <text class="recommend-name">{{ game.name }}</text>
-          <view class="recommend-meta">
-            <text>⭐ {{ game.bggScore }}</text>
-          </view>
-        </view>
-      </scroll-view>
+        </scroll-view>
+      </intersection-observer>
     </view>
 
     <!-- 游戏列表 -->
@@ -64,7 +66,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onShow, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { useGameStore } from '@/stores/game'
 import { useUserStore } from '@/stores/user'
 import SearchBar from '@/components/SearchBar.vue'
@@ -72,6 +74,8 @@ import FilterPanel from '@/components/FilterPanel.vue'
 import GameCard from '@/components/GameCard.vue'
 import CustomTabBar from '@/components/CustomTabBar.vue'
 import { applyTheme, getTheme } from '@/utils/theme'
+import { enableWeChatOfficialShare, buildPageSharePayload, buildTimelineSharePayload, buildShareImages } from '@/utils/share'
+import { getStatusBarHeight } from '@/utils/system'
 
 const gameStore = useGameStore()
 const userStore = useUserStore()
@@ -82,10 +86,10 @@ const statusBarHeight = ref(44)
 
 // 获取状态栏高度 & 加载数据
 onMounted(() => {
-  const sysInfo = uni.getSystemInfoSync()
-  statusBarHeight.value = sysInfo.statusBarHeight || 44
+  statusBarHeight.value = getStatusBarHeight(44)
   userStore.init()
   applyTheme(getTheme())
+  enableWeChatOfficialShare()
   // 从后端拉取游戏列表
   gameStore.fetchGames()
 })
@@ -115,6 +119,22 @@ function onFilter(filters) {
 function goDetail(id) {
   uni.navigateTo({ url: `/pages/game-detail/index?id=${id}` })
 }
+
+function onHotGameIntersect(event) {
+  // IntersectionObserver callback for native performance mode
+}
+
+onShareAppMessage(() => buildPageSharePayload({
+  title: 'BGaide 桌游探索｜找规则、找推荐、找灵感',
+  path: '/pages/home/index',
+  imageUrl: buildShareImages('/static/icons/placeholder.svg')
+}))
+
+onShareTimeline(() => buildTimelineSharePayload({
+  title: 'BGaide 桌游探索｜找规则、找推荐、找灵感',
+  query: '',
+  imageUrl: buildShareImages('/static/icons/placeholder.svg')
+}))
 </script>
 
 <style lang="scss" scoped>

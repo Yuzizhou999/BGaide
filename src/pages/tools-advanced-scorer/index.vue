@@ -75,6 +75,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToolsStore } from '@/stores/tools'
+import { getStatusBarHeight } from '@/utils/system'
 
 const toolsStore = useToolsStore()
 const statusBarHeight = ref(44)
@@ -91,8 +92,7 @@ const categories = [
 ]
 
 onMounted(() => {
-  const sysInfo = uni.getSystemInfoSync()
-  statusBarHeight.value = sysInfo.statusBarHeight || 44
+  statusBarHeight.value = getStatusBarHeight(44)
   toolsStore.init()
 })
 

@@ -76,13 +76,6 @@
                 "navigationBarTitleText": "趣味惩罚",
                 "navigationStyle": "custom"
             }
-        },
-        {
-            "path": "pages/tools-ai/index",
-            "style": {
-                "navigationBarTitleText": "桌游 AI 助手",
-                "navigationStyle": "custom"
-            }
         }
     ],
     "tabBar": {

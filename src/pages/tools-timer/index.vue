@@ -83,6 +83,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useToolsStore } from '@/stores/tools'
+import { getStatusBarHeight } from '@/utils/system'
 
 const toolsStore = useToolsStore()
 const statusBarHeight = ref(44)
@@ -100,8 +101,7 @@ const presets = [
 ]
 
 onMounted(() => {
-  const sysInfo = uni.getSystemInfoSync()
-  statusBarHeight.value = sysInfo.statusBarHeight || 44
+  statusBarHeight.value = getStatusBarHeight(44)
   toolsStore.init()
   // 如果切回时在运行状态，恢复计时
   if (toolsStore.timer.isRunning) {

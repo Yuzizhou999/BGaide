@@ -52,6 +52,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { getStatusBarHeight, getWindowHeight, getWindowWidth, getPixelRatio } from '@/utils/system'
 
 const statusBarHeight = ref(44)
 const canvasSize = ref(280)
@@ -73,12 +74,11 @@ let canvasNode = null
 const statusText = ref('点击屏幕开始旋转')
 
 onMounted(() => {
-    const sysInfo = uni.getSystemInfoSync()
-    statusBarHeight.value = sysInfo.statusBarHeight || 44
-    bodyMinHeight.value = Math.max(560, (sysInfo.windowHeight || 720) - (statusBarHeight.value + 44))
+    statusBarHeight.value = getStatusBarHeight(44)
+    bodyMinHeight.value = Math.max(560, getWindowHeight(720) - (statusBarHeight.value + 44))
 
     // 根据屏幕宽度调整 canvas 大小
-    const screenWidth = sysInfo.windowWidth
+    const screenWidth = getWindowWidth(375)
     canvasSize.value = Math.min(screenWidth * 0.65, 300)
 
     // 初始化 Canvas
@@ -119,7 +119,7 @@ function initCanvas() {
             canvasCtx = canvasNode.getContext('2d')
 
             // 设置 canvas 实际像素大小（高清）
-            const dpr = uni.getSystemInfoSync().pixelRatio
+            const dpr = getPixelRatio(1)
             canvasNode.width = canvasSize.value * dpr
             canvasNode.height = canvasSize.value * dpr
             canvasCtx.scale(dpr, dpr)

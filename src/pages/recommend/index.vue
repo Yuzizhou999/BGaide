@@ -106,10 +106,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onShow, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { get } from '@/utils/api'
 import { applyTheme, getTheme } from '@/utils/theme'
 import CustomTabBar from '@/components/CustomTabBar.vue'
+import { enableWeChatOfficialShare, buildPageSharePayload, buildTimelineSharePayload, buildShareImages } from '@/utils/share'
+import { getStatusBarHeight } from '@/utils/system'
 
 const statusBarHeight = ref(44)
 const logoError = ref(false)
@@ -117,9 +119,9 @@ const sourceGames = ref([])
 const managedRecommendIds = ref([])
 
 onMounted(() => {
-  const sysInfo = uni.getSystemInfoSync()
-  statusBarHeight.value = sysInfo.statusBarHeight || 44
+  statusBarHeight.value = getStatusBarHeight(44)
   applyTheme(getTheme())
+  enableWeChatOfficialShare()
   fetchRecommendPageData()
 })
 
@@ -235,6 +237,18 @@ function goDetail(id) {
 function goExplore() {
   uni.switchTab({ url: '/pages/home/index' })
 }
+
+onShareAppMessage(() => buildPageSharePayload({
+  title: '星轨桌游推荐｜热门桌游一键开局',
+  path: '/pages/recommend/index',
+  imageUrl: buildShareImages('/static/icons/star-orbit-logo.png')
+}))
+
+onShareTimeline(() => buildTimelineSharePayload({
+  title: '星轨桌游推荐｜热门桌游一键开局',
+  query: '',
+  imageUrl: buildShareImages('/static/icons/star-orbit-logo.png')
+}))
 </script>
 
 <style lang="scss" scoped>
@@ -393,6 +407,7 @@ function goExplore() {
   font-weight: 900;
   background: linear-gradient(to right, #ffffff, #c9e9ff);
   -webkit-background-clip: text;
+  background-clip: text;
   color: transparent;
 }
 
@@ -531,6 +546,7 @@ function goExplore() {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
   height: 78rpx;
 }

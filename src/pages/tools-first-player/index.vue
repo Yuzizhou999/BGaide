@@ -61,6 +61,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { getStatusBarHeight } from '@/utils/system'
 
 const statusBarHeight = ref(44)
 const newName = ref('')
@@ -69,8 +70,7 @@ const result = ref('')
 const isSpinning = ref(false)
 
 onMounted(() => {
-  const sysInfo = uni.getSystemInfoSync()
-  statusBarHeight.value = sysInfo.statusBarHeight || 44
+  statusBarHeight.value = getStatusBarHeight(44)
 })
 
 const displayText = computed(() => {

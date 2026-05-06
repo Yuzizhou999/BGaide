@@ -66,13 +66,6 @@
           <text class="tool-hint">随机挑战 + 全屏特效</text>
         </view>
 
-        <view class="tool-card" @tap="goTo('tools-ai')">
-          <view class="tool-icon-wrap ai">
-            <text class="tool-icon">🤖</text>
-          </view>
-          <text class="tool-name">桌游 AI 助手</text>
-          <text class="tool-hint">规则答疑 + 开局建议</text>
-        </view>
       </view>
     </view>
 
@@ -83,16 +76,18 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onShow, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { applyTheme, getTheme } from '@/utils/theme'
 import CustomTabBar from '@/components/CustomTabBar.vue'
+import { enableWeChatOfficialShare, buildPageSharePayload, buildTimelineSharePayload, buildShareImages } from '@/utils/share'
+import { getStatusBarHeight } from '@/utils/system'
 
 const statusBarHeight = ref(44)
 
 onMounted(() => {
-  const sysInfo = uni.getSystemInfoSync()
-  statusBarHeight.value = sysInfo.statusBarHeight || 44
+  statusBarHeight.value = getStatusBarHeight(44)
   applyTheme(getTheme())
+  enableWeChatOfficialShare()
 })
 
 onShow(() => {
@@ -102,6 +97,18 @@ onShow(() => {
 function goTo(page) {
   uni.navigateTo({ url: `/pages/${page}/index` })
 }
+
+onShareAppMessage(() => buildPageSharePayload({
+  title: 'BGaide 工具箱｜起始玩家、计分板、计时器',
+  path: '/pages/tools/index',
+  imageUrl: buildShareImages('/static/icons/tools.png')
+}))
+
+onShareTimeline(() => buildTimelineSharePayload({
+  title: 'BGaide 工具箱｜起始玩家、计分板、计时器',
+  query: '',
+  imageUrl: buildShareImages('/static/icons/tools.png')
+}))
 </script>
 
 <style lang="scss" scoped>
@@ -252,10 +259,6 @@ function goTo(page) {
 
   &.punish {
     background: linear-gradient(135deg, #e17055, #ff9f43);
-  }
-
-  &.ai {
-    background: linear-gradient(135deg, #0f9d8a, #6fcf97);
   }
 }
 

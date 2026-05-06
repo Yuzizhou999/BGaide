@@ -67,12 +67,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onShow, onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app'
 import { useGameStore } from '@/stores/game'
 import { useUserStore } from '@/stores/user'
 import { applyTheme } from '@/utils/theme'
 import { post } from '@/utils/api'
 import CustomTabBar from '@/components/CustomTabBar.vue'
+import { enableWeChatOfficialShare, buildPageSharePayload, buildTimelineSharePayload, buildShareImages } from '@/utils/share'
+import { getStatusBarHeight } from '@/utils/system'
 
 const gameStore = useGameStore()
 const userStore = useUserStore()
@@ -140,10 +142,10 @@ async function syncUnsyncedFeedbacks() {
 }
 
 onMounted(() => {
-  const sysInfo = uni.getSystemInfoSync()
-  statusBarHeight.value = sysInfo.statusBarHeight || 44
+  statusBarHeight.value = getStatusBarHeight(44)
   userStore.init()
   applyTheme()
+  enableWeChatOfficialShare()
 })
 
 onShow(() => {
@@ -209,6 +211,18 @@ async function submitFeedback() {
 }
 
 hydrateCollectedGames()
+
+onShareAppMessage(() => buildPageSharePayload({
+  title: 'BGaide 我的收藏｜把喜欢的桌游存起来',
+  path: '/pages/profile/index',
+  imageUrl: buildShareImages('/static/icons/profile.png')
+}))
+
+onShareTimeline(() => buildTimelineSharePayload({
+  title: 'BGaide 我的收藏｜把喜欢的桌游存起来',
+  query: '',
+  imageUrl: buildShareImages('/static/icons/profile.png')
+}))
 </script>
 
 <style lang="scss" scoped>

@@ -166,6 +166,7 @@
 import { ref, onMounted } from 'vue'
 import { useToolsStore } from '@/stores/tools'
 import { applyTheme, getTheme } from '@/utils/theme'
+import { getStatusBarHeight } from '@/utils/system'
 
 const toolsStore = useToolsStore()
 const statusBarHeight = ref(44)
@@ -195,8 +196,7 @@ const doneRewards = [
 ]
 
 onMounted(() => {
-  const sysInfo = uni.getSystemInfoSync()
-  statusBarHeight.value = sysInfo.statusBarHeight || 44
+  statusBarHeight.value = getStatusBarHeight(44)
   applyTheme(getTheme())
   toolsStore.init()
   selectedLevel.value = toolsStore.punishment.level || 'all'
